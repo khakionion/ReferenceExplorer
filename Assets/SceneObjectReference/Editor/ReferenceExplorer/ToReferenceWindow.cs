@@ -6,39 +6,14 @@ using System.Text.RegularExpressions;
 
 namespace ReferenceExplorer
 {
-	public class ToReferenceWindow : EditorWindow
+	public class ToReferenceWindow
 	{
-
-		[MenuItem("Window/Referenced/To Object")]
-		static void Init ()
-		{
-			var window = GetWindow (typeof(ToReferenceWindow));
-			window.title = "to";
-			window.Show ();
-		}
-
-		List<ReferenceObject> referenceObjectList = new List<ReferenceObject> ();
+		public List<ReferenceObject> referenceObjectList = new List<ReferenceObject> ();
 		List<PerhapsReferenceObject> perhapsReferenceObjectList = new List<PerhapsReferenceObject> ();
 	
-		void OnInspectorUpdate ()
-		{
-			Repaint ();
-		}
-	
-		void OnEnable ()
-		{
-			SceneView.onSceneGUIDelegate -= OnSceneGUI;
-			SceneView.onSceneGUIDelegate += OnSceneGUI;
-		}
-	
-		void OnDisable ()
-		{
-			SceneView.onSceneGUIDelegate -= OnSceneGUI;
-		}
-		
 		Vector2 current;
 
-		void OnSelectionChange ()
+		public void OnSelectionChange ()
 		{
 			referenceObjectList.Clear ();
 			SceneObjectUtility.Init ();
@@ -77,7 +52,7 @@ namespace ReferenceExplorer
 			}
 		}
 
-		void OnSceneGUI (SceneView sceneView)
+		public void OnSceneGUI (SceneView sceneView)
 		{
 			var selection = Selection.activeGameObject as GameObject;
 			if (selection == null)
@@ -130,13 +105,11 @@ namespace ReferenceExplorer
 			}
 		}
 	
-		void OnGUI ()
+		public void OnGUI ()
 		{
 			GUIStyle styles = new GUIStyle ();
 			styles.margin.left = 10;
 			styles.margin.top = 5;
-
-			current = EditorGUILayout.BeginScrollView (current);
 		
 			int preGameObjectID = 0;
 
@@ -148,22 +121,21 @@ namespace ReferenceExplorer
 			}
 
 			try {
+				EditorGUILayout.BeginVertical (GUILayout.Width (Screen.width * 0.5f - 10));
+				EditorGUILayout.Space();
+
+
 				foreach (var refObj in comps) {
 					var components = referenceObjectList.FindAll ((item) => {
 						return item.rootComponent == refObj;
 					});
-					EditorGUILayout.BeginHorizontal ("box", GUILayout.Width (Screen.width * 0.96f));
+					EditorGUILayout.BeginVertical ("box");
+					GUILayout.Label (components [0].rootComponent.GetType ().Name);
 
-					GUILayout.Label (components [0].rootComponent.GetType ().Name, GUILayout.ExpandWidth (true));
-
-					EditorGUILayout.BeginVertical ();
 					foreach (var toComp in components) {
-						string msg = string.Format ("( {1} ) {0} ", toComp.memberName, toComp.value.GetType ().Name);
+						string msg = string.Format ("{0} ->  ", toComp.memberName, toComp.value.GetType ().Name);
 
-						EditorGUILayout.BeginHorizontal ();
-						EditorGUILayout.LabelField (msg);
-						EditorGUILayout.ObjectField ((Object)toComp.value, toComp.value.GetType (), true);
-						EditorGUILayout.EndHorizontal ();
+						EditorGUILayout.ObjectField (msg, (Object)toComp.value, toComp.value.GetType (), true);
 					}
 
 					foreach (var compName in perhapsReferenceObjectList) {
@@ -174,16 +146,14 @@ namespace ReferenceExplorer
 					}
 
 					EditorGUILayout.EndVertical ();
-					EditorGUILayout.EndHorizontal ();
 				}
 
+				EditorGUILayout.EndVertical();
 			} catch {
 				referenceObjectList.Clear ();
 			}
-
-		
-			EditorGUILayout.EndScrollView ();
 		}
+
 		public class PerhapsReferenceObject
 		{
 			public Component comp;
